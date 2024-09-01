@@ -1,0 +1,72 @@
+# ansible/roles/nextcloud/tasks/main.yml
+
+---
+- name: Update pacman packages
+  pacman:
+    update_cache: yes
+
+- name: Install required packages for Apache, PHP, and PostgreSQL
+  pacman:
+    name:
+      - nextcloud
+      - apache
+      - php
+      - php-apache
+      - php-gd
+      - postgresql
+    state: present
+
+- name: Initialize PostgreSQL database cluster
+  command: sudo -u postgres initdb --locale $LANG -D /var/lib/postgres/data
+  args:
+    creates: /var/lib/postgres/data/postgresql.conf
+
+- name: Start and enable PostgreSQL service
+  systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create PostgreSQL user for Nextcloud
+  postgresql_user:
+    name: nextclouduser
+    password: "{{ nextcloud_db_password }}"
+    state: present
+
+- name: Create PostgreSQL database for Nextcloud
+  postgresql_db:
+    name: nextcloud
+    owner: nextclouduser
+    encoding: UTF8
+    state: present
+
+- name: Copy Nextcloud Apache configuration
+  template:
+    src: nextcloud.conf.j2
+    dest: /etc/httpd/conf/extra/nextcloud.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart Apache
+
+- name: Enable Nextcloud Apache configuration
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^Include conf/extra/nextcloud.conf'
+    line: 'Include conf/extra/nextcloud.conf'
+    state: present
+
+- name: Configure PHP for Nextcloud
+  template:
+    src: php.ini.j2
+    dest: /etc/php/php.ini
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart Apache
+
+- name: Start and enable Apache service
+  systemd:
+    name: httpd
+    state: started
+    enabled: yes

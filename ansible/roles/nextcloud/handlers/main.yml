@@ -1,0 +1,8 @@
+# ansible/roles/nextcloud/handlers/main.yml
+
+---
+- name: Restart Apache
+  systemd:
+    name: httpd
+    state: restarted
+

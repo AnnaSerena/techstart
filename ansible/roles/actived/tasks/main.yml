@@ -1,0 +1,9 @@
+---
+- name: "Intégrer les clients Linux au domaine"
+  include_tasks: arch.yml
+  when: ansible_os_family == "Archlinux"
+
+- name: "Intégrer les clients Windows au domaine"
+  include_tasks: win.yml
+  when: ansible_os_family == "Windows"
+

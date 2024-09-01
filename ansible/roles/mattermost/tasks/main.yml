@@ -1,0 +1,83 @@
+---
+- name: Installer Docker et Docker Compose
+  pacman:
+    name: 
+      - docker
+      - docker-compose
+    state: present
+  become: yes
+
+- name: Installer les dépendances Python nécessaires
+  pacman:
+    name: 
+      - python-requests
+    state: present
+
+- name: Activer et démarrer Docker
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+  become: yes
+
+- name: Créer un réseau Docker pour Mattermost
+  command: docker network create mattermost-network
+  ignore_errors: yes
+  become: yes
+
+- name: Déployer MySQL avec Docker
+  docker_container:
+    name: mattermost-mysql
+    image: mysql:5.7
+    state: started
+    restart_policy: always
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+      MYSQL_DATABASE: "{{ mysql_db }}"
+      MYSQL_USER: "{{ mysql_user }}"
+      MYSQL_PASSWORD: "{{ mysql_user_password }}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - name: mattermost-network
+  become: yes
+
+- name: Déployer Mattermost avec Docker
+  docker_container:
+    name: mattermost
+    image: mattermost/mattermost-preview:{{ mattermost_version }}
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ mattermost_http_port }}:8065"
+    networks:
+      - name: mattermost-network
+    env:
+      MM_CONFIG: /mattermost/config/config.json
+  become: yes
+
+- name: Créer le répertoire de configuration de Mattermost
+  file:
+    path: /opt/mattermost/config
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Configurer la base de données MySQL pour Mattermost
+  template:
+    src: mattermost.conf.j2
+    dest: /opt/mattermost/config/config.json
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Arrêter le conteneur Mattermost
+  docker_container:
+    name: mattermost
+    state: stopped
+
+- name: Démarrer le conteneur Mattermost
+  docker_container:
+    name: mattermost
+    state: started

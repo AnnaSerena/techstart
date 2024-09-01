@@ -1,0 +1,17 @@
+# ansible/roles/nextcloud/templates/nextcloud.conf.j2
+
+Alias /nextcloud "/usr/share/webapps/nextcloud/"
+
+<Directory /usr/share/webapps/nextcloud/>
+    Require all granted
+    AllowOverride All
+    Options FollowSymLinks MultiViews
+
+    <IfModule mod_dav.c>
+        Dav off
+    </IfModule>
+</Directory>
+
+<Directory /usr/share/webapps/nextcloud/data/>
+    Require all denied
+</Directory>

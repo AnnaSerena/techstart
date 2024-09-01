@@ -1,0 +1,56 @@
+# roles/mysql/tasks/main.yml
+---
+- name: Installer MySQL sur Arch Linux
+  pacman:
+    name: mariadb
+    state: present
+  when: ansible_os_family == "Archlinux"
+
+- name: Installer MySQL sur Windows
+  win_chocolatey:
+    name: mariadb
+    state: present
+  when: ansible_os_family == "Windows"
+
+- name: Assurer que MySQL est démarré sur Arch Linux
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+  when: ansible_os_family == "Archlinux"
+
+- name: Assurer que MariaDB est démarré sur Windows
+  win_service:
+    name: MariaDB
+    start_mode: auto
+    state: started
+  when: ansible_os_family == "Windows"
+
+- name: Initialiser la base de données MySQL sur Arch Linux
+  command: mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+  when: ansible_os_family == "Archlinux"
+
+- name: Créer une base de données Nextcloud sur Arch Linux
+  mysql_db:
+    name: nextcloud_db
+    state: present
+  when: ansible_os_family == "Archlinux"
+
+- name: Créer un utilisateur MySQL pour Nextcloud sur Arch Linux
+  mysql_user:
+    name: nextcloud_user
+    password: "{{ mysql_nextcloud_password }}"
+    priv: 'nextcloud_db.*:ALL'
+    state: present
+  when: ansible_os_family == "Archlinux"
+
+- name: Créer une base de données Nextcloud sur Windows
+  win_command: |
+    mysql -u root -e "CREATE DATABASE nextcloud_db;"
+  when: ansible_os_family == "Windows"
+
+- name: Créer un utilisateur MySQL pour Nextcloud sur Windows
+  win_command: |
+    mysql -u root -e "CREATE USER 'nextcloud_user'@'localhost' IDENTIFIED BY '{{ mysql_nextcloud_password }}';"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON nextcloud_db.* TO 'nextcloud_user'@'localhost';"
+  when: ansible_os_family == "Windows"

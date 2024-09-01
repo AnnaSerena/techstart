@@ -1,0 +1,5 @@
+# ansible/roles/nextcloud/defaults/main.yml
+
+---
+mariadb_root_password: "rootpassword"
+nextcloud_db_password: "nextcloudpassword"

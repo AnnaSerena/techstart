@@ -1,0 +1,13 @@
+{
+  "SqlSettings": {
+    "DriverName": "{{ mattermost_db_driver }}",
+    "DataSource": "{{ mattermost_db_user }}:{{ mattermost_db_password }}@tcp({{ mattermost_db_host }}:{{ mattermost_db_port }})/{{ mattermost_db_name }}?charset=utf8mb4,utf8&readTimeout=30s&writeTimeout=30s",
+    "DataSourceReplicas": [],
+    "MaxIdleConns": 10,
+    "MaxOpenConns": 10,
+    "Trace": false,
+    "AtRestEncryptKey": "SOME_RANDOM_KEY_HERE",
+    "QueryTimeout": 30,
+    "DisableDatabaseSearch": false
+  }
+}

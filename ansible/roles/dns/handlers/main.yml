@@ -1,0 +1,5 @@
+---
+- name: Redémarrer BIND
+  systemd:
+    name: named
+    state: restarted

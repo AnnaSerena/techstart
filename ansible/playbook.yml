@@ -1,0 +1,7 @@
+---
+- name: Configure MySQL and Mattermost
+  hosts: linux
+  roles:
+    - dns
+    - mattermost
+

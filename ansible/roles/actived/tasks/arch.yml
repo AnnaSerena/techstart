@@ -1,0 +1,32 @@
+---
+- name: Installer les dépendances pour joindre le domaine (Arch Linux)
+  pacman:
+    name:
+      - realmd
+      - sssd
+      - adcli
+      - krb5
+      - samba
+      - oddjob
+      - oddjob-mkhomedir
+      - nss-mdns
+    state: present
+    update_cache: yes
+
+- name: Rejoindre le domaine Active Directory
+  command: realm join --user="{{ ad_admin_user }}" "{{ domain_name }}"
+  vars:
+    ansible_become_password: "{{ ad_admin_password }}"
+
+- name: Configurer SSSD
+  copy:
+    src: sssd.conf
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Redémarrer le service SSSD
+  systemd:
+    name: sssd
+    state: restarted

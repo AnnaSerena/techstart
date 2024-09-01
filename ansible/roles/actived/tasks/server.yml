@@ -1,0 +1,20 @@
+---
+- name: Installer les services AD DS
+  win_feature:
+    name: AD-Domain-Services
+    include_management_tools: yes
+
+- name: Promouvoir le serveur en tant que contrôleur de domaine
+  win_shell: |
+    Install-ADDSForest `
+      -DomainName "{{ domain_name }}" `
+      -SafeModeAdministratorPassword (ConvertTo-SecureString "{{ ad_admin_password }}" -AsPlainText -Force) `
+      -InstallDns `
+      -Force
+  args:
+    executable: powershell
+
+- name: Redémarrer le serveur après promotion
+  win_reboot:
+    msg: "Rebooting after AD DS installation"
+    pre_reboot_delay: 30
